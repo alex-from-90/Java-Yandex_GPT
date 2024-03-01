@@ -71,6 +71,25 @@ public class YandexGPTRequest {
                                 String textResponse = extractTextFromJson(jsonResponse);
                                 System.out.println("Ответ Алиски: " + textResponse);
                                 System.out.println("\nОтвет модели: " + jsonResponse);
+                                
+
+                                // Извлечение числа токенов из ответа
+                                int promptTokens = Integer.parseInt(getTokenValue(jsonResponse, "inputTextTokens"));
+                                int responseTokens = Integer.parseInt(getTokenValue(jsonResponse, "completionTokens"));
+
+                                // Коэффициент стоимости использования модели YandexGPT Lite в синхронном режиме
+                                double coefficient = 1.0;
+
+                                // Стоимость за 1000 токенов (вкл. НДС) для YandexGPT Lite, синхронный режим
+                                double costPer1000Tokens = 0.40;
+
+                                // Расчет числа тарифицирующих юнитов
+                                double billingUnits = (promptTokens + responseTokens) * coefficient / 1000;
+
+                                // Расчет общей стоимости
+                                double totalCost = billingUnits * costPer1000Tokens;
+
+                                System.out.println("\nСтоимость запроса: " + totalCost + " ₽");
                             }
                         }
                     }
@@ -84,6 +103,12 @@ public class YandexGPTRequest {
     private static String extractTextFromJson(String jsonResponse) {
         // Простейший способ извлечения текста из JSON
         int startIndex = jsonResponse.indexOf("\"text\":\"") + 8;
+        int endIndex = jsonResponse.indexOf("\"", startIndex);
+        return jsonResponse.substring(startIndex, endIndex);
+    }
+    private static String getTokenValue(String jsonResponse, String tokenType) {
+        // Извлечение значения токена из JSON
+        int startIndex = jsonResponse.indexOf("\"" + tokenType + "\":\"") + tokenType.length() + 4;
         int endIndex = jsonResponse.indexOf("\"", startIndex);
         return jsonResponse.substring(startIndex, endIndex);
     }
